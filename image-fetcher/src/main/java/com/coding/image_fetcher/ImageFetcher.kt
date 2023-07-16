@@ -2,29 +2,58 @@ package com.coding.image_fetcher
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import org.json.JSONObject
 import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class ImageFetcher {
 
     private val dogImages: MutableList<String> = mutableListOf()
     private var currentIndex: Int = -1
 
-    suspend fun initialize() {
+    private val dogApiService: DogApiService by lazy {
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://dog.ceo/api/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        retrofit.create(DogApiService::class.java)
+    }
+
+    suspend fun initialize(number: Int) {
         withContext(Dispatchers.IO) {
-            val apiUrl = "https://dog.ceo/api/breeds/image/random" // Fetch 10 dog images
-            val response = URL(apiUrl).readText()
-            val json = JSONObject(response)
-            val status = json.getString("status")
-            if (status == "success") {
-                val message = json.getJSONArray("message")
-                for (i in 0 until message.length()) {
-                    dogImages.add(message.getString(i))
+            try {
+                dogImages.clear()
+                repeat(number) {
+                    val response = dogApiService.getRandomDogImage()
+                    val imageUrl = response.message
+                    dogImages.add(imageUrl)
+                }
+                currentIndex = 0
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    suspend fun getRandomDogImages(number: Int): List<String> {
+        val images = mutableListOf<String>()
+        withContext(Dispatchers.IO) {
+            repeat(number) {
+                try {
+                    val response = dogApiService.getRandomDogImage()
+                    if (response.status == "success") {
+                        val imageUrl = response.message
+                        images.add(imageUrl)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             }
         }
+        return images
     }
 
     suspend fun getImage(): Bitmap? {
@@ -45,12 +74,28 @@ class ImageFetcher {
 
     suspend fun getImages(number: Int): List<Bitmap?> {
         val images = mutableListOf<Bitmap?>()
-        repeat(number) {
-            val image = getImage()
-            images.add(image)
-            getNextImage()
+        if (number > 0) {
+            val startIndex = currentIndex
+            for (i in 0 until number) {
+                val index = (startIndex + i) % dogImages.size
+                val imageUrl = dogImages[index]
+                val image = loadBitmapFromUrl(imageUrl)
+                images.add(image)
+            }
         }
         return images
+    }
+
+    private suspend fun loadBitmapFromUrl(imageUrl: String): Bitmap? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val url = URL(imageUrl)
+                BitmapFactory.decodeStream(url.openConnection().getInputStream())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
     }
 
     fun getNextImage() {
@@ -65,3 +110,5 @@ class ImageFetcher {
         }
     }
 }
+
+
