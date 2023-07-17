@@ -10,8 +10,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class ImageFetcher {
 
-    private val dogImages: MutableList<String> = mutableListOf()
-    private var currentIndex: Int = -1
+     val dogImages: MutableList<String> = mutableListOf()
+     var currentIndex: Int = -1
 
     private val dogApiService: DogApiService by lazy {
         val retrofit = Retrofit.Builder()
