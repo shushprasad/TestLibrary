@@ -1,8 +1,6 @@
 package com.coding.image_fetcher
 
 import org.junit.Test
-
-
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 

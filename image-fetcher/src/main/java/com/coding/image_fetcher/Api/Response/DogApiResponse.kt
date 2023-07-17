@@ -1,4 +1,4 @@
-package com.coding.image_fetcher
+package com.coding.image_fetcher.Api.Response
 
 data class DogApiResponse(
     val message: String,

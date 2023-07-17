@@ -2,6 +2,7 @@ package com.coding.image_fetcher
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import com.coding.image_fetcher.Api.DogApiService
 import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
